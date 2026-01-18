@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>To-Do List</title>
+    <style>
+        body {
+            background-color: #ced1f8;
+            color: #333;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #ffc1cc;
+            font-size: 5em;
+            margin-bottom: 20px;
+            text-shadow:
+                -1px -1px 0 #ffffff,
+                 1px -1px 0 #ffffff,
+                -1px  1px 0 #ffffff,
+                 1px  1px 0 #ffffff;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="text"], input[type="date"] {
+            padding: 10px;
+            border: 2px solid #ced1f8;
+            border-radius: 8px;
+            outline: none;
+            background-color: #ffffff;
+        }
+
+        input[type="text"] {
+            width: 250px;
+        }
+
+        button {
+            background-color: #ffc1cc;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #ffd6e0;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 20px;
+        }
+
+        li {
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: auto 1fr 120px auto;
+            align-items: center;
+            gap: 10px;
+            background-color: #ffffff;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-text.completed {
+            text-decoration: line-through;
+            color: #a1a1a1;
+        }
+
+        .due-date {
+            text-align: right;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+<h1>To-Do List</h1>
+
+<div class="input-row">
+    <input type="text" id="task-input" placeholder="Add a new task">
+    <input type="date" id="date-input">
+    <button onclick="addTask()">Add</button>
+</div>
+
+<ul id="todo-list"></ul>
+
+<script>
+    let toDoList = JSON.parse(localStorage.getItem("tasks")) || [];
+
+    function saveTasks() {
+        localStorage.setItem("tasks", JSON.stringify(toDoList));
+    }
+
+    function sortTasks() {
+        toDoList.sort((a, b) => {
+            if (!a.dueDate) return 1;
+            if (!b.dueDate) return -1;
+            return new Date(a.dueDate) - new Date(b.dueDate);
+        });
+    }
+
+    function addTask() {
+        const textInput = document.getElementById("task-input");
+        const dateInput = document.getElementById("date-input");
+
+        const taskText = textInput.value.trim();
+        const dueDate = dateInput.value;
+
+        if (taskText !== "") {
+            toDoList.push({
+                text: taskText,
+                completed: false,
+                dueDate: dueDate
+            });
+
+            textInput.value = "";
+            dateInput.value = "";
+
+            sortTasks();
+            saveTasks();
+            updateList();
+        }
+    }
+
+    function toggleComplete(index) {
+        toDoList[index].completed = !toDoList[index].completed;
+        saveTasks();
+        updateList();
+    }
+
+    function removeTask(index) {
+        toDoList.splice(index, 1);
+        saveTasks();
+        updateList();
+    }
+
+    function updateList() {
+        sortTasks();
+
+        const list = document.getElementById("todo-list");
+        list.innerHTML = "";
+
+        toDoList.forEach((task, index) => {
+            const listItem = document.createElement("li");
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = task.completed;
+            checkbox.onclick = () => toggleComplete(index);
+
+            const span = document.createElement("span");
+            span.textContent = task.text;
+            span.className = "task-text";
+            if (task.completed) span.classList.add("completed");
+
+            const dateSpan = document.createElement("span");
+            dateSpan.className = "due-date";
+            dateSpan.textContent = task.dueDate ? task.dueDate : "No date";
+
+            const removeBtn = document.createElement("button");
+            removeBtn.textContent = "Remove";
+            removeBtn.onclick = () => removeTask(index);
+
+            listItem.appendChild(checkbox);
+            listItem.appendChild(span);
+            listItem.appendChild(dateSpan);
+            listItem.appendChild(removeBtn);
+
+            list.appendChild(listItem);
+        });
+    }
+
+    updateList();
+</script>
+
+</body>
+</html>
